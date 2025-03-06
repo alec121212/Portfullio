@@ -2,11 +2,13 @@ import express, { Request, Response } from 'express';
 import bodyParser from 'body-parser';
 import { addNewUser, getAllUsers } from './utils/userUtils';
 import { UserData } from './Models/User';
+import cors from "cors";
 
 const app = express();
 const port = 5000;
 
 app.use(bodyParser.json());
+app.use(cors());
 
 app.get('/users', (req: Request, res: Response) => {
   try {
