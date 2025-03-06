@@ -1,41 +1,41 @@
-import express, { Request, Response } from "express";
-import mongoose from "mongoose";
-import { ZodError } from "zod";
-import cors from "cors";
-import dotenv from "dotenv";
-import { User } from "./Models/User";
-import { UserSchema } from "./Schemas/userSchema";
+import express, { Request, Response } from 'express';
+import bodyParser from 'body-parser';
+import { addNewUser, getAllUsers } from './utils/userUtils';
+import { UserData } from './Models/User';
 
-dotenv.config();
 const app = express();
-app.use(express.json());
-app.use(cors());
+const port = 5000;
 
+app.use(bodyParser.json());
 
-mongoose
-  .connect(process.env.MONGO_URI as string)
-  .then(() => console.log("MongoDB connected"))
-  .catch((err) => console.error(err));
-
-app.post("/users", async (req: Request, res: Response) => {
+app.get('/users', (req: Request, res: Response) => {
   try {
-    const parsedData = UserSchema.parse(req.body);
-    const user = new User(parsedData);
-    await user.save();
-    res.status(201).json(user);
-    res.status(200).send('Received data');
-  } catch (err) {
-    if (err instanceof ZodError) {
-      console.error(err.errors);
-    } else {
-      console.error('Unknown error:', err);
-    }
+    const users = getAllUsers();
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch users' });
   }
 });
 
-app.get("/users", async (_req: Request, res: Response) => {
-  const users = await User.find();
-  res.json(users);
+app.post('/users', (req: Request, res: Response) => {
+  const { name, walletAddress }: UserData = req.body;
+
+  if (!name || !walletAddress) {
+    res.status(400).json({ error: 'Name and wallet address are required' });
+    return;
+  }
+
+  const newUser: UserData = { name, walletAddress };
+
+  try {
+    addNewUser(newUser);
+    res.status(201).json({ message: 'User added successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to add user' });
+  }
 });
 
-app.listen(5000, () => console.log("Server running on port 5000, "));
+// Start the server
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
+});
