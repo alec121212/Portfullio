@@ -14,6 +14,7 @@ const Home = () => {
         <h3>By: Mike Damiano, Patrick Quinlan, Alec Rakita, Oliver Peralta</h3>
         <button onClick={() => navigate("/Login")}>Login</button>
         <UserForm />
+        <button onClick={() => navigate("/Crypto")}>View Crypto</button>
     </div>
     </>
   );
