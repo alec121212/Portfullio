@@ -1,4 +1,3 @@
-// src/App.jsx
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Layout from "./pages/Layout.jsx";
@@ -10,6 +9,7 @@ import Portfolio from "./pages/Portfolio.jsx";
 import Analytics from "./pages/Analytics.jsx";
 import About from "./pages/About.jsx";
 import Crypto from "./pages/Crypto.jsx";
+import PlaidInvestments from './pages/Plaid';
 
 function App() {
   return (
