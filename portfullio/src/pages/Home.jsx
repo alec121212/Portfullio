@@ -15,6 +15,7 @@ const Home = () => {
         <button onClick={() => navigate("/Login")}>Login</button>
         <UserForm />
         <button onClick={() => navigate("/Crypto")}>View Crypto</button>
+        <button onClick={() => navigate("/investments")}>View Investments</button>
     </div>
     </>
   );
