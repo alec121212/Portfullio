@@ -1,0 +1,28 @@
+/* src/pages/Layout.css */
+
+/* Light mode body is default */
+body {
+  background-color: #f8f9fa; /* a light gray from Bootstrap */
+  color: #212529;
+  transition: background-color 0.4s, color 0.4s;
+}
+
+.dark-mode {
+  background-color: #212529;
+  color: #f8f9fa;
+}
+
+.layout-content {
+  min-height: 80vh;
+}
+
+/* Example: tweak the navbar in dark mode */
+.dark-mode .navbar {
+  background-color: #343a40 !important;
+  color: #f8f9fa;
+}
+.dark-mode .navbar-brand,
+.dark-mode .nav-link,
+.dark-mode .form-check-label {
+  color: #f8f9fa !important;
+}
