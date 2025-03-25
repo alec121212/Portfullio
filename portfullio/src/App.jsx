@@ -1,25 +1,34 @@
-import './App.css'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import Home from './pages/Home'
-import Login from './pages/Login'
-import Dashboard from './pages/Dashboard'
-import 'bootstrap/dist/css/bootstrap.min.css';
-import Crypto from './pages/Crypto'
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Layout from "./pages/Layout.jsx";
+
+import Home from "./pages/Home.jsx";
+import Login from "./pages/Login.jsx";
+import Dashboard from "./pages/Dashboard.jsx";
+import Portfolio from "./pages/Portfolio.jsx";
+import Analytics from "./pages/Analytics.jsx";
+import About from "./pages/About.jsx";
+import Crypto from "./pages/Crypto.jsx";
+import PlaidInvestments from './pages/Plaid';
 import StockPrice from './pages/StockPrice'
 
 function App() {
-
   return (
     <Router>
-      <Routes>
-        <Route path="/" element={<Home/>} />
-        <Route path="/Login" element={<Login />} />
-        <Route path="/Dashboard" element={<Dashboard />} />
-        <Route path="/crypto" element={<Crypto/>} />
-        <Route path="/StockPrice" element={<StockPrice/>} />
-      </Routes>
+      <Layout>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/portfolio" element={<Portfolio />} />
+          <Route path="/analytics" element={<Analytics />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/crypto" element={<Crypto />} />
+          <Route path="/stockprice" element={<StockPrice/>} />
+        </Routes>
+      </Layout>
     </Router>
-  )
+  );
 }
 
 export default App;

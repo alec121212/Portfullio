@@ -1,0 +1,11 @@
+{
+  "name": "portfullio",
+  "version": "1.0.0",
+  "description": "Welcome to Portfullio! This project is a web-based application where you can view and track your entire investment portfolio at once.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
