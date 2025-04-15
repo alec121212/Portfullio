@@ -43,7 +43,7 @@ app.post('/users', (req: Request, res: Response) => {
 });
 
 const api_key = finnhub.ApiClient.instance.authentications['api_key'];
-api_key.apiKey = process.env.FINNHUB_KEY as string; // Use environment variables
+api_key.apiKey = process.env.FINNHUB_KEY as string; // .env variable
 const finnhubClient = new finnhub.DefaultApi();
 
 app.get("/api/stock/:symbol", async (req, res) => {
@@ -60,6 +60,27 @@ app.get("/api/stock/:symbol", async (req, res) => {
   } catch (error) {
       console.error("Error fetching stock data:", error);
       res.status(500).json({ error: "Failed to fetch stock data" });
+  }
+});
+
+app.get("/api/stock/:symbol/history", async (req, res) => {
+  try {
+    const { symbol } = req.params;
+    const response = await axios.get(
+      `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1y`
+    );
+
+    const timestamps = response.data.chart.result[0].timestamp;
+    const prices = response.data.chart.result[0].indicators.quote[0].close;
+
+    const formattedData = timestamps.map((timestamp: number, i: string | number) => ({
+      date: new Date(timestamp * 1000).toLocaleDateString("en-US"),
+      price: prices[i],
+    }));
+
+    res.json(formattedData);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch stock history" });
   }
 });
 // Start the server
