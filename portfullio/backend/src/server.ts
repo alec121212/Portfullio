@@ -46,14 +46,14 @@ const api_key = finnhub.ApiClient.instance.authentications['api_key'];
 api_key.apiKey = process.env.FINNHUB_KEY as string; // .env variable
 const finnhubClient = new finnhub.DefaultApi();
 
-app.get("/api/stock/:symbol", async (req, res) => {
+app.get("/api/asset/:symbol", async (req, res) => {
   try {
       const { symbol } = req.params;
       console.log(`Fetching stock data for: ${symbol}`);
 
       const response = await axios.get(
           `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${process.env.FINNHUB_KEY}`,
-          { timeout: 5000 } // 5-second timeout
+          { timeout: 5000 }
       );
 
       res.json(response.data);
@@ -62,6 +62,24 @@ app.get("/api/stock/:symbol", async (req, res) => {
       res.status(500).json({ error: "Failed to fetch stock data" });
   }
 });
+
+app.get("/api/asset/:symbol", async (req, res) => {
+  try {
+      const { symbol } = req.params;
+      console.log(`Fetching crypto data for: ${symbol}`);
+
+      const response = await axios.get(
+          `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${process.env.FINNHUB_KEY}`,
+          { timeout: 5000 }
+      );
+
+      res.json(response.data);
+  } catch (error) {
+      console.error("Error fetching stock data:", error);
+      res.status(500).json({ error: "Failed to fetch stock data" });
+  }
+});
+
 
 app.get("/api/stock/:symbol/history", async (req, res) => {
   try {
