@@ -85,19 +85,43 @@ app.get("/api/stock/:symbol/history", async (req, res) => {
   try {
     const { symbol } = req.params;
     const response = await axios.get(
-      `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1y`
+      `https://query1.finance.yahoo.com/v7/finance/chart/${symbol}?interval=5m&range=1d`
     );
 
     const timestamps = response.data.chart.result[0].timestamp;
     const prices = response.data.chart.result[0].indicators.quote[0].close;
+    //logic for bad prices
+    let lastValidPrice: number | null = null;
 
-    const formattedData = timestamps.map((timestamp: number, i: string | number) => ({
-      date: new Date(timestamp * 1000).toLocaleDateString("en-US"),
-      price: prices[i],
-    }));
+    const formattedData = timestamps.map((timestamp: number, i: number) => {
+      let price = prices[i];
+
+      if (price === null || price === 0) {
+        price = lastValidPrice;
+      } else if (lastValidPrice !== null) {
+        const percentChange = Math.abs((price - lastValidPrice) / lastValidPrice) * 100;
+        if (percentChange > 99.5) {
+          // sudden drop or spike — considered invalid
+          price = lastValidPrice;
+        } else {
+          lastValidPrice = price;
+        }
+      } else {
+        // First valid price
+        lastValidPrice = price;
+      }
+
+      return {
+        date: new Date(timestamp * 1000).toLocaleTimeString("en-US", {
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
+        price,
+      };
+    });
 
     res.json(formattedData);
-  } catch (error) {
+  } catch (error) { 
     res.status(500).json({ error: "Failed to fetch stock history" });
   }
 });
