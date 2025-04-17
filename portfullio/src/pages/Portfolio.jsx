@@ -1,7 +1,7 @@
 // src/pages/Portfolio.jsx
 import React, { useState, useEffect } from "react";
 import { Table, Card } from "react-bootstrap";
-import axios from "axios";
+import api from "../lib/api";
 import {LineChart, Line, XAxis, YAxis, Tooltip, 
         ResponsiveContainer, CartesianGrid, } from "recharts";
 
@@ -55,7 +55,7 @@ const Portfolio = () => {
                         if (isCrypto) {
                           symbol = `${asset.ticker}-USD`;
                         }
-                        const res = await axios.get(`http://localhost:5000/api/stock/${symbol}/history`);
+                        const res = await api.get(`/api/stock/${symbol}/history`);
                         console.log(`Response for ${symbol}:`, res.data);
                         const history = res.data;
 

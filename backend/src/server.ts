@@ -1,5 +1,4 @@
 import express, { Request, Response } from 'express';
-import bodyParser from 'body-parser';
 import axios from 'axios';
 import { addNewUser, getAllUsers } from './utils/userUtils';
 import { UserData } from './Models/User';
@@ -7,10 +6,10 @@ import cors from "cors";
 import dotenv from 'dotenv';
 
 const app = express();
-const port = 5000;
+const port = process.env.PORT ? Number(process.env.PORT) : 5050;
 dotenv.config(); 
 
-app.use(bodyParser.json());
+app.use(express.json());  
 app.use(cors());
 
 const finnhub = require('finnhub');

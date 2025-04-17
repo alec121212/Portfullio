@@ -1,7 +1,7 @@
 // src/pages/Dashboard.jsx
 import React, { useEffect, useState } from "react";
 import { Button, Row, Col, Card } from "react-bootstrap";
-import axios from "axios";
+import api from "../lib/api";
 import {LineChart, Line, XAxis, YAxis, Tooltip, 
         ResponsiveContainer, CartesianGrid, } from "recharts";
 
@@ -11,7 +11,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchChartData = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/stock/AAPL/history`);
+        const res = await api.get(`/api/stock/AAPL/history`);
         console.log("Chart API response:", res.data);
   
         const formatted = res.data.map((entry) => ({

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
+import api from "../lib/api";
 
 function StockPrice() {
   const [symbol, setSymbol] = useState('');
@@ -10,7 +10,7 @@ function StockPrice() {
     console.log("Fetching price for:", symbol);
 
     try {
-      const response = await axios.get(`http://localhost:5000/api/asset/${symbol}`);
+      const response = await api.get(`/api/asset/${symbol}`);
       console.log(response.data);
       setPrice(response.data.c);
       setError(null);
