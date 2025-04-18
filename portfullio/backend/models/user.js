@@ -6,11 +6,6 @@ const userSchema = new  mongoose.Schema({
   name: { type: String },
   profilePicture: { type: String },
   createdAt: { type: Date, default: Date.now },
-
-  ethWallet: [
-    {
-      address: { type: String, required: true, unique: true },
-      addedAt: { type: Date, default: Date.now }
-    }
-  ]
 });
+
+module.exports = mongoose.model('user', userSchema)
