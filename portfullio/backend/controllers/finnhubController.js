@@ -1,4 +1,4 @@
-const axios = require('axios');
+import axios from 'axios';
 
 const getAssetQuote = async (req, res) => {
   try {
@@ -61,7 +61,7 @@ const getStockHistory = async (req, res) => {
   }
 };
 
-module.exports = {
+export {
   getAssetQuote,
   getStockHistory,
 };
