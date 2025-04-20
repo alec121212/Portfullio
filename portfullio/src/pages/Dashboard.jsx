@@ -30,7 +30,7 @@ const Dashboard = () => {
 
   return (
     <div className="container">
-      <h2 className="mb-4 fw-bold text-success">Dashboard Overview</h2>
+   <h2 className="page-header">Dashboard Overview</h2>
 
       {/* Quick Stats */}
       <Row className="mb-4 g-3">

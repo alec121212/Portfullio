@@ -113,8 +113,8 @@ const Portfolio = () => {
                 };
   return (
     <div className="container">
-      <h2 className="fw-bold mb-4 text-primary">My Portfolio</h2>
-      <Card className="shadow-sm border-0">
+   <h2 className="fw-bold mb-4 portfolio-header">My Portfolio</h2>
+<Card className="shadow-sm border-0">
       <Card.Body>
           <Table hover responsive>
             <thead>
