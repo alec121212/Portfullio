@@ -5,8 +5,8 @@ import { Card, Row, Col } from "react-bootstrap";
 const Analytics = () => {
   return (
     <div className="container">
-      <h2 className="fw-bold mb-4 text-warning">Analytics</h2>
-      <Row className="g-4">
+ <h2 className="page-header">Analytics</h2>
+  <Row className="g-4">
         <Col md={6}>
           <Card className="shadow-sm border-0">
             <Card.Body>

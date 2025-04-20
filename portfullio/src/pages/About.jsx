@@ -7,8 +7,8 @@ const About = () => {
     <div className="container">
       <Card className="shadow-sm border-0">
         <Card.Body>
-          <h2 className="fw-bold mb-3 text-success">About Portfullio</h2>
-          <p className="fs-5">
+         <h2 className="page-header">About Portfullio</h2>
+        <p className="fs-5">
             <strong>Portfullio</strong> is your all-in-one investment tracking platform. We aggregate and
             visualize data from your crypto wallets, traditional brokerage accounts, and more—so you
             can see your entire financial picture in a single dashboard.
