@@ -10,13 +10,18 @@ const Dashboard = () => {
 
   const userJohnAssets = [
     { ticker: 'AAPL', name:'Apple', quantity: 20 },
-    { ticker: 'BTC', name:'Bitcoin', quantity: 0.75 },
+    { ticker: 'BTC', name:'Bitcoin', quantity: 0.25 },
     { ticker: 'VOO', name:'Vanguard S&P 500 ETF', quantity: 10 },
   ];
   
   const [chartData, setChartData] = useState([]);
   const [pieChartData, setPieChartData] = useState([]);
   const COLORS = ['#00cec9', '#fdcb6e', '#d63031', '#6c5ce7'];
+  //To toggle
+  const [showByType, setShowByType] = useState(true);
+  const [pieChartByTicker, setPieChartByTicker] = useState([]);
+  const activePieData = showByType ? pieChartData : pieChartByTicker;
+
 
   useEffect(() => {
     const fetchChartData = async () => {
@@ -64,13 +69,21 @@ const Dashboard = () => {
           stockTotal += totalValue;
         }
       }
-      const pieData = [
+      const pieDataByType = [
         { name: 'Crypto', value: cryptoTotal },
         { name: 'Stocks', value: stockTotal },
       ];
-      setPieChartData(pieData);
+      setPieChartData(pieDataByType);
+      
+      const pieDataByTicker = userJohnAssets.map(asset => {
+        const price = newPrices[asset.ticker];
+        return {
+          name: asset.ticker,
+          value: price * asset.quantity,
+        };
+      });
+      setPieChartByTicker(pieDataByTicker);
     };
-  
     fetchChartData();
   }, []);
 
@@ -116,11 +129,11 @@ const Dashboard = () => {
 
       {/* Charts */}
       <Row className="g-4">
-        <Col md={8}>
+        <Col md={7}>
           <Card className="shadow-sm border-0">
             <Card.Body>
               <Card.Title>Portfolio Growth</Card.Title>
-              <div style={{ width: "100%", height: "300px" }}>
+              <div style={{ width: "100%", height: "300px" }}>               
                 {chartData.length === 0 ? (
                   <p className="text-center mt-5 text-muted">Loading or no data...</p>
                 ) : (
@@ -138,17 +151,28 @@ const Dashboard = () => {
             </Card.Body>
           </Card>
         </Col>
-        <Col md={4}>
+        <Col md={5}>
           <Card className="shadow-sm border-0">
             <Card.Body>
-              <Card.Title>Positions</Card.Title>
-              <div style={{ height: "250px", background: "#ffe", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              {pieChartData.every(item => item.value === 0) ? (
+            <div className="d-flex justify-content-between align-items-center mb-2">
+              <Card.Title className="mb-0">Positions</Card.Title>
+              <Button 
+                variant="outline-secondary" 
+                size="sm" 
+                onClick={() => setShowByType(prev => !prev)}
+                style={{ fontSize: "0.75rem", padding: "2px 8px" }}
+              >
+                {showByType ? "View by Ticker" : "View by Type"}
+              </Button>
+            </div>
+              <div style={{ height: "300px", background: "#ffe", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              {activePieData.every(item => item.value === 0) ? (
                 <p className="text-center text-muted">Loading pie chart...</p>
               ) : (
-                <PieChart width={250} height={250}>
+                <PieChart width={325} height={200}>
+                  
                   <Pie
-                    data={pieChartData}
+                    data={activePieData}
                     cx="50%"
                     cy="50%"
                     labelLine={false}
@@ -157,11 +181,13 @@ const Dashboard = () => {
                     fill="#8884d8"
                     dataKey="value"
                   >
-                    {pieChartData.map((entry, index) => (
+                    {activePieData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip />
+                  <Tooltip 
+                    formatter={(value, name) => [`$${value.toLocaleString()}`, name]} 
+                  />
                   <Legend />
                 </PieChart>
               )}
