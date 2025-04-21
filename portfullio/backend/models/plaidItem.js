@@ -21,4 +21,4 @@ const plaidSchema = new mongoose.Schema({
     ]
 });
 
-module.exports = mongoose.model('plaidItem', plaidSchema);
+export default mongoose.model('plaidItem', plaidSchema);

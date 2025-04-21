@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-const userSchema = new  mongoose.Schema({
+const userSchema = new mongoose.Schema({
   googleId: { type: String, required: true, unique: true },
   email: { type: String, required: true, unique: true },
   name: { type: String },
@@ -8,4 +8,4 @@ const userSchema = new  mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-module.exports = mongoose.model('user', userSchema)
+export default mongoose.model('user', userSchema)

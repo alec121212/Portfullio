@@ -18,5 +18,4 @@ const wallet = new mongoose.Schema({
         default: Date.now
     }
 });
-
-module.exports = mongoose.model('crypto', wallet);
+export default mongoose.model('crypto', wallet);

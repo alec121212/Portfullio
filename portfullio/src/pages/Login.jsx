@@ -8,9 +8,30 @@ import { BsArrowLeftCircle } from "react-icons/bs";
 const Login = () => {
   const navigate = useNavigate();
 
-  const handleSuccess = () => {
-    navigate("/dashboard");
-  };
+  const handleSuccess = async (response) => {
+    const { credential } = response.credential;
+    if (!credential) {
+      console.error("No credential returned from Google");
+      return alert("Login failed. Try again.");
+    } else {
+      console.log(credential);
+    }
+
+    const userData = await fetch("http://localhost:5000/api/auth/google", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token: credential })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      console.log("User authenticated:", data.user);
+      navigate("/dashboard");
+    } else {
+      alert("Google authentication failed.");
+    }
+    };
 
   const handleFailure = () => {
     console.log("Google Login Failed");
@@ -29,11 +50,11 @@ const Login = () => {
         <p className="text-muted">Manage all your investments in one place.</p>
 
         <div className="d-flex justify-content-center my-4">
-          <GoogleLogin onSuccess={handleSuccess} onError={handleFailure} />
+          <GoogleLogin onSuccess={(credentialResponse) => console.log(credentialResponse)} onError={handleFailure} />
         </div>
 
         {/* Example: or a manual button if needed */}
-        <Button variant="primary" className="w-100" onClick={handleSuccess}>
+        <Button variant="primary" className="w-100" onClick={() => Login}>
           Continue
         </Button>
       </Card>
