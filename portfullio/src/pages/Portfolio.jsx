@@ -60,8 +60,6 @@ const Portfolio = () => {
                         const res = await axios.get(`http://localhost:5000/api/stock/${symbol}/history`);
                         console.log(`Response for ${symbol}:`, res.data);
                         const history = res.data;
-
-                        let lastValid = null;
                         history.forEach(entry => {
                         
                           const value = entry.price * asset.quantity;

@@ -3,7 +3,8 @@ import React, { useEffect, useState } from "react";
 import { Button, Row, Col, Card } from "react-bootstrap";
 import axios from "axios";
 import {LineChart, Line, XAxis, YAxis, Tooltip, 
-        ResponsiveContainer, CartesianGrid, } from "recharts";
+        ResponsiveContainer, CartesianGrid, 
+        PieChart, Pie, Cell, Legend} from "recharts";
 
 const Dashboard = () => {
 
@@ -14,6 +15,8 @@ const Dashboard = () => {
   ];
   
   const [chartData, setChartData] = useState([]);
+  const [pieChartData, setPieChartData] = useState([]);
+  const COLORS = ['#00cec9', '#fdcb6e', '#d63031', '#6c5ce7'];
 
   useEffect(() => {
     const fetchChartData = async () => {
@@ -30,6 +33,42 @@ const Dashboard = () => {
       } catch (err) {
         console.error("Error fetching chart data:", err);
       }
+
+
+      const newPrices = {};
+      let cryptoTotal = 0;
+      let stockTotal = 0;
+      for (const asset of userJohnAssets) {
+        let symbol = asset.ticker;
+      
+        const isCrypto = (ticker) => {
+          const cryptoTickers = ['BTC', 'ETH', 'DOGE', 'SOL', 'ADA', 'XRP', 'BNB'];
+          return cryptoTickers.includes(ticker.toUpperCase());
+        };
+      
+        const isCryptoAsset = isCrypto(asset.ticker);
+        if (isCryptoAsset) {
+          symbol = `BINANCE:${asset.ticker}USDT`;
+        }
+      
+        const url = `http://localhost:5000/api/asset/${symbol}`;
+        const response = await axios.get(url);
+        const pricePerUnit = Number(response.data.c);
+        newPrices[asset.ticker] = pricePerUnit;
+      
+        const totalValue = pricePerUnit * asset.quantity;
+      
+        if (isCryptoAsset) {
+          cryptoTotal += totalValue;
+        } else {
+          stockTotal += totalValue;
+        }
+      }
+      const pieData = [
+        { name: 'Crypto', value: cryptoTotal },
+        { name: 'Stocks', value: stockTotal },
+      ];
+      setPieChartData(pieData);
     };
   
     fetchChartData();
@@ -103,8 +142,29 @@ const Dashboard = () => {
           <Card className="shadow-sm border-0">
             <Card.Body>
               <Card.Title>Positions</Card.Title>
-              <div style={{ height: "250px", background: "#ffe", borderRadius: "8px" }}>
-                <p className="text-center pt-5 text-muted">[Pie Chart Placeholder]</p>
+              <div style={{ height: "250px", background: "#ffe", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              {pieChartData.every(item => item.value === 0) ? (
+                <p className="text-center text-muted">Loading pie chart...</p>
+              ) : (
+                <PieChart width={250} height={250}>
+                  <Pie
+                    data={pieChartData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {pieChartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              )}
               </div>
             </Card.Body>
           </Card>
