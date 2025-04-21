@@ -29,7 +29,6 @@ const getStockHistory = async (req, res) => {
 
     let lastValidPrice = null;
 
-    // Format data first
     const formattedData = timestamps.map((timestamp, i) => {
       let price = prices[i];
 
@@ -46,35 +45,16 @@ const getStockHistory = async (req, res) => {
         lastValidPrice = price;
       }
 
-      // Convert to Eastern Time
-      const dateObj = new Date(timestamp * 1000);
-      const etTime = new Date(dateObj.toLocaleString('en-US', { timeZone: 'America/New_York' }));
-      const hour = etTime.getHours();
-      const minute = etTime.getMinutes();
-      const totalMinutes = hour * 60 + minute;
-
-      // NYSE filter: 9:30 AM - 4:00 PM (570 to 960)
-      if (totalMinutes < 570 || totalMinutes > 960) return null;
-
       return {
-        date: etTime.toLocaleTimeString('en-US', {
+        date: new Date(timestamp * 1000).toLocaleTimeString('en-US', {
           hour: '2-digit',
-            minute: '2-digit',
-          }),
+          minute: '2-digit',
+        }),
         price,
       };
-    }).filter(Boolean); // remove nulls
+    });
 
-    const cleanedData = formattedData
-    .filter((entry, i, arr) => {
-      if (i === 0) return true;
-      const prev = arr[i - 1].price;
-      const change = Math.abs((entry.price - prev) / prev) * 100;
-      return change < 30;
-    })
-    .slice(0, -1); // remove the last point
-
-    res.json(cleanedData);
+    res.json(formattedData);
   } catch (error) {
     console.error('Stock history fetch error:', error);
     res.status(500).json({ error: 'Failed to fetch stock history' });

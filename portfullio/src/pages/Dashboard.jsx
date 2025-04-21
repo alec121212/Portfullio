@@ -6,13 +6,6 @@ import {LineChart, Line, XAxis, YAxis, Tooltip,
         ResponsiveContainer, CartesianGrid, } from "recharts";
 
 const Dashboard = () => {
-
-  const userJohnAssets = [
-    { ticker: 'AAPL', name:'Apple', quantity: 20 },
-    { ticker: 'BTC', name:'Bitcoin', quantity: 0.75 },
-    { ticker: 'VOO', name:'Vanguard S&P 500 ETF', quantity: 10 },
-  ];
-  
   const [chartData, setChartData] = useState([]);
 
   useEffect(() => {
