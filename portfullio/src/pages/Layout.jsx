@@ -61,9 +61,6 @@ const Layout = ({ children }) => {
               <Nav.Link as={Link} to="/portfolio">
                 Portfolio
               </Nav.Link>
-              <Nav.Link as={Link} to="/analytics">
-                Analytics
-              </Nav.Link>
               <Nav.Link as={Link} to="/about">
                 About
               </Nav.Link>
