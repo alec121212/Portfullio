@@ -7,9 +7,8 @@ import Login from "./pages/Login.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Portfolio from "./pages/Portfolio.jsx";
 import About from "./pages/About.jsx";
-import Crypto from "./pages/Crypto.jsx";
-import PlaidInvestments from './pages/Plaid';
-import StockPrice from './pages/StockPrice'
+
+import RouteProtect from './util/routeProtect.jsx';
 
 function App() {
   return (
@@ -18,11 +17,9 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/portfolio" element={<Portfolio />} />
+          <Route path="/dashboard" element={<RouteProtect><Dashboard /></RouteProtect>} />
+          <Route path="/portfolio" element={<RouteProtect><Portfolio /></RouteProtect>} />
           <Route path="/about" element={<About />} />
-          <Route path="/crypto" element={<Crypto />} />
-          <Route path="/stockprice" element={<StockPrice/>} />
         </Routes>
       </Layout>
     </Router>

@@ -1,11 +1,25 @@
-// src/pages/Home.jsx
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import UserForm from "./UserForm.jsx"; 
 import { Button, Card, Row, Col } from "react-bootstrap";
 
 const Home = () => {
   const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const jwtToken = localStorage.getItem('jwtToken');
+    const userData = localStorage.getItem('user');
+
+    if (jwtToken && userData) {
+      setUser(JSON.parse(userData));
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('jwtToken');
+    localStorage.removeItem('user');
+    setUser(null);
+  };
 
   return (
     <div className="container">
@@ -21,25 +35,26 @@ const Home = () => {
               </Card.Text>
 
               <div className="d-flex justify-content-center my-4">
-                <Button
-                  variant="primary"
-                  className="me-2 px-4"
-                  onClick={() => navigate("/login")}
-                >
-                  Login
-                </Button>
-                <Button
-                  variant="outline-primary"
-                  className="px-4"
-                  onClick={() => navigate("/crypto")}
-                >
-                  View Crypto
-                </Button>
+                {user ? (
+                  <>
+                    <span className="me-3">Welcome, {user.name}!</span>
+                    <Button variant="outline-danger" onClick={handleLogout}>
+                      Logout
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    variant="primary"
+                    className="me-2 px-4"
+                    onClick={() => navigate("/login")}
+                  >
+                    Login
+                  </Button>
+                )}
               </div>
 
               <hr />
 
-              <UserForm />
             </Card.Body>
           </Card>
         </Col>
