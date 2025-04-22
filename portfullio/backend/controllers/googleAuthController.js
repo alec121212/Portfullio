@@ -1,30 +1,34 @@
 import { OAuth2Client }from 'google-auth-library';
 import user from '../models/user.js';
 import dotenv from 'dotenv';
+import { jwtDecode } from 'jwt-decode';
 dotenv.config();
-
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 export const googleAuth = async (req, res) => {
     try {
         const { token } = req.body;
 
-        const ticket = await client.verifyIdToken({
-            idToken: token,
-            audience: process.env.GOOGLE_CLIENT_ID
-        });
+        const decoded = jwtDecode(token);
 
-        const payload = ticket.getPayload();
-        const { name, email, sub:googleId, picture } = payload;
+        const { email, name, picture } = decoded;
+        console.log(decoded);
 
-        let User = await user.findOne({ googleId });
+        if (!email) {
+            return res.status(400).json({ error: 'Missing email in token' });
+        }      
+        let User = await user.findOne({ email });
         if (!User) {
-            user = await User.create({ googleId, name, email, picture });
+            User = await user.create({
+                email,
+                name,
+                picture 
+            });
         }
 
-        res.json({ success: true, user });
+        res.json({ success: true, User });
     } catch (err) {
-        console.err('Google Auth Error:', err);
+        console.error('Google Auth Error:', err);
         res.status(401).json({ error: 'Invalid Google Token' });
     }
 };
+

@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 const wallet = new mongoose.Schema({
-    userId: {
+    email: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true

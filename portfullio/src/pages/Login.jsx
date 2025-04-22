@@ -4,26 +4,22 @@ import { useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 import { Card, Button } from "react-bootstrap";
 import { BsArrowLeftCircle } from "react-icons/bs";
+import { jwtDecode } from 'jwt-decode';
 
 const Login = () => {
   const navigate = useNavigate();
 
   const handleSuccess = async (response) => {
-    const { credential } = response.credential;
-    if (!credential) {
-      console.error("No credential returned from Google");
-      return alert("Login failed. Try again.");
-    } else {
-      console.log(credential);
-    }
-
+    const credential = response.credential;
+    console.log(credential);
+ 
     const userData = await fetch("http://localhost:5000/api/auth/google", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token: credential })
+      body: JSON.stringify({ token: response.credential })
     });
 
-    const data = await response.json();
+    const data = await userData.json();
 
     if (data.success) {
       console.log("User authenticated:", data.user);
@@ -50,7 +46,7 @@ const Login = () => {
         <p className="text-muted">Manage all your investments in one place.</p>
 
         <div className="d-flex justify-content-center my-4">
-          <GoogleLogin onSuccess={(credentialResponse) => console.log(credentialResponse)} onError={handleFailure} />
+          <GoogleLogin onSuccess={handleSuccess} onError={handleFailure} />
         </div>
 
         {/* Example: or a manual button if needed */}
