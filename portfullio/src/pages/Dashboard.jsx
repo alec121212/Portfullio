@@ -1,27 +1,14 @@
 import React, { useEffect, useState } from "react";
 import {
   Button,
-  Row,
-  Col,
   Card,
   Form,
   Spinner
 } from "react-bootstrap";
 import axios from "axios";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  CartesianGrid,
-  PieChart,
-  Pie,
-  Cell,
-  Legend
-} from "recharts";
 import { usePlaidLink } from "react-plaid-link";
+import { getEthBalance } from "../util/etherscan.jsx";
+import { getNFTs } from "../util/opensea.jsx";
 
 const Dashboard = () => {
   const [walletExists, setWalletExists] = useState(false);
@@ -29,20 +16,16 @@ const Dashboard = () => {
   const [plaidExists, setPlaidExists] = useState(false);
   const [linkToken, setLinkToken] = useState(null);
 
-  //these don't work for now
-  const [chartData, setChartData] = useState([]);
-  const [pieChartData, setPieChartData] = useState([]);
-  const [pieChartByTicker, setPieChartByTicker] = useState([]);
-  const [showByType, setShowByType] = useState(true);
-  const [loadingHoldings, setLoadingHoldings] = useState(false);
-
-  const activePieData = showByType ? pieChartData : pieChartByTicker;
-  const COLORS = ['#00cec9', '#fdcb6e', '#d63031', '#6c5ce7'];
+  const [investments, setInvestments] = useState([]);
+  const [ethBalance, setEthBalance] = useState(null);
+  const [nfts, setNfts] = useState([]);
+  const [loadingData, setLoadingData] = useState(false);
 
   const authHeader = () => ({
     headers: { Authorization: `Bearer ${localStorage.getItem("jwtToken")}` }
   });
 
+  // 1) check wallet & Plaid status
   useEffect(() => {
     (async () => {
       try {
@@ -63,6 +46,7 @@ const Dashboard = () => {
     })();
   }, []);
 
+  // 2) fetch Plaid Link token
   useEffect(() => {
     if (plaidExists) return;
     (async () => {
@@ -79,7 +63,8 @@ const Dashboard = () => {
     })();
   }, [plaidExists]);
 
-  const { open, ready: plaidReady } = usePlaidLink({
+  // Plaid Link hook
+  const { open, ready } = usePlaidLink({
     token: linkToken,
     onSuccess: async (public_token) => {
       try {
@@ -95,93 +80,62 @@ const Dashboard = () => {
     }
   });
 
+  // save crypto wallet
   const handleSaveWallet = async () => {
     try {
-      await axios.post(
-        "http://localhost:5000/api/crypto/wallet",
-        { address },
-        authHeader()
-      );
+      await axios.post("http://localhost:5000/api/crypto/wallet", { address }, authHeader());
       setWalletExists(true);
     } catch (e) {
       console.error("Save wallet error:", e);
     }
   };
 
-  //doesn't work for now
+  // 3) once both exist, fetch investments, ETH balance & NFTs
   useEffect(() => {
     if (!(walletExists && plaidExists)) return;
+    (async () => {
+      setLoadingData(true);
 
-    const fetchChartData = async () => {
-      const userJohnAssets = [
-        { ticker: 'AAPL', name:'Apple', quantity: 20 },
-        { ticker: 'BTC', name:'Bitcoin', quantity: 0.25 },
-        { ticker: 'VOO', name:'Vanguard S&P 500 ETF', quantity: 10 },
-      ];
-
+      // Plaid investments
       try {
-        const res = await axios.get(
-          "http://localhost:5000/api/stock/AAPL/history"
+        const res = await axios.post(
+          "http://localhost:5000/api/plaid/investments",
+          {},
+          authHeader()
         );
-        const formatted = res.data.map((entry) => ({
-          date: entry.date,
-          price: entry.price
-        }));
-        setChartData(formatted);
-      } catch (err) {
-        console.error("Error fetching chart data:", err);
+        setInvestments(res.data.holdings);
+      } catch (e) {
+        console.error("Investments fetch error:", e);
       }
 
-      const newPrices = {};
-      let cryptoTotal = 0;
-      let stockTotal = 0;
-      for (const asset of userJohnAssets) {
-        let symbol = asset.ticker;
-        const isCrypto = ['BTC','ETH','DOGE','SOL','ADA','XRP','BNB']
-          .includes(asset.ticker.toUpperCase());
-
-        if (isCrypto) {
-          symbol = `BINANCE:${asset.ticker}USDT`;
-        }
-        try {
-          const resp = await axios.get(
-            `http://localhost:5000/api/asset/${symbol}`
-          );
-          const pricePerUnit = Number(resp.data.c);
-          const totalValue = pricePerUnit * asset.quantity;
-          newPrices[asset.ticker] = pricePerUnit;
-          if (isCrypto) cryptoTotal += totalValue;
-          else         stockTotal  += totalValue;
-        } catch(e) {
-          console.error(`Error fetching ${symbol}:`, e);
-        }
+      // ETH balance
+      try {
+        const bal = await getEthBalance(address);
+        setEthBalance(bal);
+      } catch (e) {
+        console.error("ETH balance error:", e);
       }
 
-      setPieChartData([
-        { name: 'Crypto', value: cryptoTotal },
-        { name: 'Stocks', value: stockTotal }
-      ]);
+      // NFTs
+      try {
+        const myNFTs = await getNFTs(address);
+        setNfts(myNFTs);
+      } catch (e) {
+        console.error("NFTs fetch error:", e);
+      }
 
-      setPieChartByTicker(
-        userJohnAssets.map((asset) => ({
-          name: asset.ticker,
-          value: (newPrices[asset.ticker]||0) * asset.quantity
-        }))
-      );
-    };
-
-    setLoadingHoldings(true);
-    fetchChartData().finally(() => setLoadingHoldings(false));
-  }, [walletExists, plaidExists]);
+      setLoadingData(false);
+    })();
+  }, [walletExists, plaidExists, address]);
 
   return (
     <div className="container my-4">
       <h2 className="page-header">Dashboard Overview</h2>
 
+      {/* integration panel */}
       <Card className="mb-4 p-3 shadow-sm">
         <h5>Connect Your Accounts</h5>
 
-        {/* Crypto Logic */}
         {!walletExists ? (
           <div className="d-flex mb-3">
             <Form.Control
@@ -203,126 +157,104 @@ const Dashboard = () => {
 
         <hr />
 
-        {/* Plaid Link */}
         {!plaidExists ? (
-          <Button
-            disabled={!plaidReady || !walletExists}
-            onClick={() => open()}
-          >
-            {plaidReady ? "Connect Brokerage via Plaid" : "Loading Plaid…"}
+          <Button disabled={!ready || !walletExists} onClick={open}>
+            {ready ? "Connect Brokerage via Plaid" : "Loading Plaid…"}
           </Button>
         ) : (
           <p className="text-success">✅ Plaid connected</p>
         )}
       </Card>
-
-      {/* None of this will work for now, we need to access the return data from calling crypto APIs and and getInvestments from
-      plaidController. Next steps*/}
+        
+      {/*DISPLAYING DATA ONCE CONNECTED*/}
       {walletExists && plaidExists ? (
-        <>
-          <Row className="mb-4 g-3">
-          </Row>
+        loadingData ? (
+          <Spinner animation="border" />
+        ) : (
+          <>
+            <Card className="mb-3">
+              <Card.Body>
+                <Card.Title>Stocks and Securities</Card.Title>
+                {/*THIS COMMENTED LINE BELOW:
+                Allows you to view all of the data returned by the Plaid API in Json Format.
+                If needed, uncomment this line to view the format and parsing return structure of the data*/}
+                {/*<pre>{JSON.stringify(investments, null, 2)}</pre>*/}
+                {
+                <ul className="mt-4 list-unstyled">
+                  {investments.length > 0 ? (
+                    investments.map((item, idx) => (
+                      <li key={item.security?.security_id ?? idx} className="border p-3 rounded shadow-sm mb-3">
+                        <p><strong>Name:</strong> {item.security?.name || 'N/A'}</p>
+                        <p><strong>Ticker:</strong> {item.security?.ticker_symbol || 'N/A'}</p>
+                        <p><strong>Type:</strong> {item.security?.type || 'N/A'}</p>
+                        <p><strong>Quantity:</strong> {item.quantity}</p>
+                        <p>
+                          <strong>Current Price:</strong>{' '}
+                          {item.security?.close_price != null
+                            ? `$${item.security.close_price.toFixed(2)}`
+                            : 'N/A'}
+                        </p>
+                        <p>
+                          <strong>Total Value:</strong>{' '}
+                          {item.institution_value != null
+                            ? `$${item.institution_value.toFixed(2)}`
+                            : 'N/A'}
+                        </p>
+                      </li>
+                    ))
+                  ) : (
+                    <p className="text-muted">No investment data found.</p>
+                  )}
+                </ul>
+                }
+              </Card.Body>
+            </Card>
 
-          <Row className="g-4">
-            <Col md={7}>
-              <Card className="shadow-sm border-0">
-                <Card.Body>
-                  <Card.Title>Portfolio Growth</Card.Title>
-                  <div style={{ width: "100%", height: "300px" }}>
-                    {!chartData.length ? (
-                      <p className="text-center mt-5 text-muted">
-                        Loading or no data…
-                      </p>
-                    ) : (
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={chartData}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="date" />
-                          <YAxis domain={["auto","auto"]} />
-                          <Tooltip />
-                          <Line
-                            type="monotone"
-                            dataKey="price"
-                            stroke="#00b894"
-                            strokeWidth={2}
-                            dot={false}
-                          />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    )}
-                  </div>
-                </Card.Body>
-              </Card>
-            </Col>
-
-            <Col md={5}>
-              <Card className="shadow-sm border-0">
-                <Card.Body>
-                  <div className="d-flex justify-content-between align-items-center mb-2">
-                    <Card.Title className="mb-0">Positions</Card.Title>
-                    <Button
-                      variant="outline-secondary"
-                      size="sm"
-                      onClick={() => setShowByType((p) => !p)}
-                      style={{ fontSize: "0.75rem", padding: "2px 8px" }}
-                    >
-                      {showByType ? "View by Ticker" : "View by Type"}
-                    </Button>
-                  </div>
-                  <div
-                    style={{
-                      height: "300px",
-                      background: "#ffe",
-                      borderRadius: "8px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center"
-                    }}
-                  >
-                    {loadingHoldings ? (
-                      <Spinner animation="border" />
-                    ) : activePieData.every((it) => it.value === 0) ? (
-                      <p className="text-center text-muted">
-                        Loading pie chart…
-                      </p>
-                    ) : (
-                      <PieChart width={325} height={200}>
-                        <Pie
-                          data={activePieData}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          label={({ name, percent }) =>
-                            `${name} ${(percent * 100).toFixed(0)}%`
-                          }
-                          outerRadius={80}
-                          dataKey="value"
+            <Card className="mb-3">
+              <Card.Body>
+                <Card.Title>Ethereum Balance</Card.Title>
+                <p>{ethBalance} ETH</p>
+              </Card.Body>
+            </Card>
+            
+            <Card className="mb-3">
+              <Card.Body>
+                <Card.Title>Your NFTs</Card.Title>
+                  <h6 className="mt-3">NFT Collection:</h6>
+                  <div className="d-flex flex-wrap">
+                    {nfts.length > 0 ? (
+                      nfts.map((nft, index) => (
+                        <Card
+                          key={index}
+                          className="m-2 shadow-sm"
+                          style={{ width: "12rem" }}
                         >
-                          {activePieData.map((_, idx) => (
-                            <Cell
-                              key={idx}
-                              fill={COLORS[idx % COLORS.length]}
+                          {nft.image_url && (
+                            <Card.Img
+                              variant="top"
+                              src={nft.image_url}
+                              alt={nft.name || "NFT image"}
+                              style={{ height: "12rem", objectFit: "cover" }}
                             />
-                          ))}
-                        </Pie>
-                        <Tooltip
-                          formatter={(value, name) => [
-                            `$${value.toLocaleString()}`,
-                            name
-                          ]}
-                        />
-                        <Legend />
-                      </PieChart>
+                          )}
+                        <Card.Body>
+                          <Card.Text className="text-truncate mb-0">
+                            {nft.name}
+                          </Card.Text>
+                        </Card.Body>
+                      </Card>
+                      ))
+                    ) : (
+                      <p className="text-muted">No NFTs found.</p>
                     )}
                   </div>
                 </Card.Body>
               </Card>
-            </Col>
-          </Row>
-        </>
+          </>
+        )
       ) : (
         <p className="text-center text-muted">
-          Please connect your wallet and brokerage above to view your dashboard.
+          Please connect your wallet and brokerage above to view your investments!.
         </p>
       )}
     </div>
