@@ -1,39 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { usePlaidLink } from 'react-plaid-link';
-import { createLinkToken, exchangePublicToken, getInvestments } from '../util/plaidapi';
 
 const PlaidInvestments = () => {
-  const [linkToken, setLinkToken] = useState(null);
-  const [accessToken, setAccessToken] = useState(null);
-  const [investments, setInvestments] = useState([]);
-
-  // Fetch the link token once on component mount
-  useEffect(() => {
-    const fetchLinkToken = async () => {
-      const token = await createLinkToken();
-      setLinkToken(token);
-    };
-    fetchLinkToken();
-  }, []);
-
-  const { open, ready } = usePlaidLink({
-    token: linkToken,
-    onSuccess: async (public_token) => {
-      const token = await exchangePublicToken(public_token);
-      setAccessToken(token);
-    },
-  });
-
-  // Fetch investments once accessToken is available
-  useEffect(() => {
-    const fetchInvestments = async () => {
-      if (accessToken) {
-        const data = await getInvestments(accessToken);
-        setInvestments(data.holdings);
-      }
-    };
-    fetchInvestments();
-  }, [accessToken]);
 
   return (
     <div className="p-6">
