@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 const wallet = new mongoose.Schema({
-    userId: {
+    email: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true
@@ -18,5 +18,4 @@ const wallet = new mongoose.Schema({
         default: Date.now
     }
 });
-
-module.exports = mongoose.model('crypto', wallet);
+export default mongoose.model('crypto', wallet);
