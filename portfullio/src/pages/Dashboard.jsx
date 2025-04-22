@@ -143,7 +143,7 @@ const Dashboard = () => {
         );
         setInvestments(inv.holdings || []);
 
-        // Fetch prices & build portfolio data
+        // Fetch prices & build portfolio data (for growth chart)
         let cryptoTotal = 0;
         let stockTotal = 0;
         const dates = new Set();
@@ -186,17 +186,7 @@ const Dashboard = () => {
         setPrice(newPrices);
         setPercentChange(newPct);
 
-        setPieChartData([
-          { name: 'Crypto', value: cryptoTotal },
-          { name: 'Stocks', value: stockTotal }
-        ]);
-        setPieChartByTicker(
-          userJohnAssets.map(a => ({
-            name: a.ticker,
-            value: (newPrices[a.ticker] || 0) * a.quantity
-          }))
-        );
-
+        // Build line‐chart data
         setChartData(
           Array.from(dates)
             .sort((a, b) => new Date(a) - new Date(b))
@@ -214,9 +204,39 @@ const Dashboard = () => {
     fetchData();
   }, [walletExists, plaidExists, address]);
 
+  // 4) Build pie chart data whenever investments change
+  useEffect(() => {
+    if (!investments.length) {
+      setPieChartData([]);
+      setPieChartByTicker([]);
+      return;
+    }
+
+    // Group by type
+    const byType = investments.reduce((acc, item) => {
+      const type = item.security?.type || "Unknown";
+      const val = item.institution_value || 0;
+      acc[type] = (acc[type] || 0) + val;
+      return acc;
+    }, {});
+
+    const dataByType = Object.entries(byType).map(([name, value]) => ({
+      name,
+      value
+    }));
+
+    // Group by ticker
+    const dataByTicker = investments.map(item => ({
+      name: item.security?.ticker_symbol || "N/A",
+      value: item.institution_value || 0
+    }));
+
+    setPieChartData(dataByType);
+    setPieChartByTicker(dataByTicker);
+  }, [investments]);
+
   return (
     <div className="container">
-      <h2 className="fw-bold mb-4 text-primary">Portfolio Dashboard</h2>
       <div className="container my-4">
         <h2 className="page-header">Dashboard Overview</h2>
 
@@ -275,24 +295,41 @@ const Dashboard = () => {
                       {investments.length > 0 ? (
                         investments.map((item, idx) => (
                           <tr key={item.security?.security_id || idx}>
-                            <td>{item.security?.name || 'N/A'} ({item.security?.ticker_symbol || 'N/A'})</td>
+                            <td>
+                              {item.security?.name || 'N/A'} (
+                              {item.security?.ticker_symbol || 'N/A'})
+                            </td>
                             <td>{item.security?.type || 'N/A'}</td>
                             <td>{item.quantity}</td>
-                            <td>{item.security?.close_price != null ? `$${item.security.close_price.toFixed(2)}` : 'N/A'}</td>
-                            <td className={getChangeClass(((item.security?.close_price - item.security?.open_price) / item.security?.open_price) * 100)}>
-                              {item.security?.close_price && item.security?.open_price ? `${(((item.security.close_price - item.security.open_price) / item.security.open_price) * 100).toFixed(2)}%` : 'N/A'}
+                            <td>
+                              {item.institution_value != null
+                                ? `$${item.institution_value.toFixed(2)}`
+                                : 'N/A'}
+                            </td>
+                            <td className={getChangeClass(
+                              ((item.security?.close_price - item.security?.open_price) /
+                                item.security?.open_price) * 100
+                            )}>
+                              {item.security?.close_price && item.security?.open_price
+                                ? `${(((item.security.close_price - item.security.open_price) /
+                                    item.security.open_price) * 100).toFixed(2)}%`
+                                : 'N/A'}
                             </td>
                           </tr>
                         ))
                       ) : (
-                        <tr><td colSpan={5} className="text-muted text-center">No investment data found.</td></tr>
+                        <tr>
+                          <td colSpan={5} className="text-muted text-center">
+                            No investment data found.
+                          </td>
+                        </tr>
                       )}
                     </tbody>
                   </Table>
                 </Card.Body>
               </Card>
 
-              {/* Portfolio Growth Chart */}
+              {/* Portfolio Growth & Positions */}
               <Row className="g-4 mb-4">
                 <Col md={7}>
                   <Card className="shadow-sm border-0">
@@ -300,15 +337,28 @@ const Dashboard = () => {
                       <Card.Title>Portfolio Growth</Card.Title>
                       <div style={{ width: '100%', height: '300px' }}>
                         {chartData.length === 0 ? (
-                          <p className="text-center text-muted mt-5">Loading or no data...</p>
+                          <p className="text-center text-muted mt-5">
+                            Loading or no data...
+                          </p>
                         ) : (
                           <ResponsiveContainer width="100%" height="100%">
                             <LineChart data={chartData}>
                               <CartesianGrid strokeDasharray="3 3" />
                               <XAxis dataKey="date" />
-                              <YAxis domain={[dataMin => Math.max(0, dataMin * 0.997), dataMax => dataMax * 1.003]} />
+                              <YAxis
+                                domain={[
+                                  dataMin => Math.max(0, dataMin * 0.997),
+                                  dataMax => dataMax * 1.003
+                                ]}
+                              />
                               <ChartTooltip />
-                              <Line type="monotone" dataKey="totalValue" stroke="#00b894" dot={false} strokeWidth={2} />
+                              <Line
+                                type="monotone"
+                                dataKey="totalValue"
+                                stroke="#00b894"
+                                dot={false}
+                                strokeWidth={2}
+                              />
                             </LineChart>
                           </ResponsiveContainer>
                         )}
@@ -321,19 +371,52 @@ const Dashboard = () => {
                     <Card.Body>
                       <div className="d-flex justify-content-between align-items-center mb-2">
                         <Card.Title className="mb-0">Positions</Card.Title>
-                        <Button variant="outline-secondary" size="sm" onClick={() => setShowByType(prev => !prev)} style={{ fontSize: '0.75rem', padding: '2px 8px' }}>
+                        <Button
+                          variant="outline-secondary"
+                          size="sm"
+                          onClick={() => setShowByType(prev => !prev)}
+                          style={{ fontSize: '0.75rem', padding: '4px 8px' }}
+                        >
                           {showByType ? 'View by Ticker' : 'View by Type'}
                         </Button>
                       </div>
-                      <div style={{ height: '300px', background: '#ffe', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <div
+                        style={{
+                          height: '300px',
+                          background: '#ffe',
+                          borderRadius: '8px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
                         {activePieData.every(item => item.value === 0) ? (
-                          <p className="text-center text-muted">Loading pie chart...</p>
+                          <p className="text-center text-muted">
+                            Loading pie chart...
+                          </p>
                         ) : (
-                          <PieChart width={325} height={200}>
-                            <Pie data={activePieData} cx="50%" cy="50%" labelLine={false} outerRadius={80} dataKey="value">
-                              {activePieData.map((entry, index) => (<Cell key={index} fill={COLORS[index % COLORS.length]} />))}
+                          <PieChart width={325} height={250}>
+                            <Pie
+                              data={activePieData}
+                              cx="50%"
+                              cy="50%"
+                              labelLine={false}
+                              outerRadius={80}
+                              dataKey="value"
+                            >
+                              {activePieData.map((entry, index) => (
+                                <Cell
+                                  key={index}
+                                  fill={COLORS[index % COLORS.length]}
+                                />
+                              ))}
                             </Pie>
-                            <ChartTooltip formatter={(value, name) => [`$${value.toLocaleString()}`, name]} />
+                            <ChartTooltip
+                              formatter={(value, name) => [
+                                `$${value.toLocaleString()}`,
+                                name
+                              ]}
+                            />
                             <Legend />
                           </PieChart>
                         )}
@@ -359,8 +442,18 @@ const Dashboard = () => {
                   <div className="d-flex flex-wrap">
                     {nfts.length > 0 ? (
                       nfts.map((nft, idx) => (
-                        <Card key={idx} className="m-2 shadow-sm" style={{ width: '12rem' }}>
-                          {nft.image_url && <Card.Img variant="top" src={nft.image_url} style={{ height: '12rem', objectFit: 'cover' }} />}
+                        <Card
+                          key={idx}
+                          className="m-2 shadow-sm"
+                          style={{ width: '12rem' }}
+                        >
+                          {nft.image_url && (
+                            <Card.Img
+                              variant="top"
+                              src={nft.image_url}
+                              style={{ height: '12rem', objectFit: 'cover' }}
+                            />
+                          )}
                           <Card.Body>
                             <Card.Text className="text-truncate mb-0">
                               {nft.name}
@@ -377,7 +470,10 @@ const Dashboard = () => {
             </>
           )
         ) : (
-          <p className="text-center text-muted">Please connect your wallet and brokerage above to view your investments!.</p>
+          <p className="text-center text-muted">
+            Please connect your wallet and brokerage above to view your
+            investments!.
+          </p>
         )}
       </div>
     </div>
