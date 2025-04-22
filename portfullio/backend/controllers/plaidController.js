@@ -45,7 +45,12 @@ export const plaidStatus = async (req, res) => {
 
 export const getInvestments = async (req, res) => {
   try {
-    const { accessToken } = req.body;
+    const item = await plaidItem.findOne({ email: req.userId });
+
+    if(!item){
+      return res.status(400).json({ error: 'No Plaid account linked' });
+    }
+    const accessToken = item.accessToken;
 
     const holdingsResponse = await plaidClient.investmentsHoldingsGet({ access_token: accessToken });
     const { holdings, securities } = holdingsResponse.data;
