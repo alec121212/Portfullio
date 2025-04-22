@@ -2,7 +2,7 @@
 import axios from "axios";
 
 const OPENSEA_KEY = import.meta.env.VITE_OPENSEA_KEY;
-const OPENSEA_URL = "https://api.opensea.io/api/v2/chain/ethereum/account";
+const OPENSEA_URL = "https://api.opensea.io/api/v2/chain/ape_chain/account";
 
 export const getNFTs = async (address) => {
   try {
