@@ -9,7 +9,7 @@ const Portfolio = () => {
 
   const userJohnAssets = [
     { ticker: 'AAPL', name:'Apple', quantity: 20 },
-    { ticker: 'BTC', name:'Bitcoin', quantity: 0.75 },
+    { ticker: 'BTC', name:'Bitcoin', quantity: 0.1 },
     { ticker: 'VOO', name:'Vanguard S&P 500 ETF', quantity: 10 },
   ];
 
@@ -32,9 +32,13 @@ const Portfolio = () => {
                     try {
                       for (const asset of userJohnAssets) {
                         let symbol = asset.ticker;
-                        const isCrypto = asset.ticker === 'BTC';
-
-                        if (isCrypto) {
+                        const isCrypto = (ticker) => {
+                          const cryptoTickers = ['BTC', 'ETH', 'DOGE', 'SOL', 'ADA', 'XRP', 'BNB'];
+                          return cryptoTickers.includes(ticker.toUpperCase());
+                        };
+                        
+                        const isCryptoAsset = isCrypto(asset.ticker);
+                        if (isCryptoAsset) {
                           symbol = `BINANCE:${asset.ticker}USDT`;
                         }
 
@@ -56,21 +60,11 @@ const Portfolio = () => {
                           symbol = `${asset.ticker}-USD`;
                         }
                         const res = await axios.get(`http://localhost:5000/api/finnhub/stock/${symbol}/history`);
+
+                        symbol = isCryptoAsset ? `${asset.ticker}-USD` : asset.ticker;
                         console.log(`Response for ${symbol}:`, res.data);
                         const history = res.data;
-
-                        let lastValid = null;
                         history.forEach(entry => {
-                          if (entry.price === null || entry.price === 0 || isNaN(entry.price)) {
-                            return;
-                          }
-
-                          if (!entry.price) {
-                            entry.price = lastValid;
-                          }
-                          else {
-                            lastValid = entry.price;
-                          }
                         
                           const value = entry.price * asset.quantity;
                           const date = entry.date;
@@ -113,8 +107,8 @@ const Portfolio = () => {
                 };
   return (
     <div className="container">
-   <h2 className="fw-bold mb-4 portfolio-header">My Portfolio</h2>
-<Card className="shadow-sm border-0">
+      <h2 className="fw-bold mb-4 text-primary">My Portfolio</h2>
+      <Card className="shadow-sm border-0">
       <Card.Body>
           <Table hover responsive>
             <thead>
@@ -155,14 +149,14 @@ const Portfolio = () => {
         {chartData.length === 0 ? (
           <p className="text-muted">Loading or no data...</p>
         ) : (
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="120%">
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="date" />
               <YAxis
                 domain={[
-                  (dataMin) => Math.max(0, dataMin * 0.95),
-                  (dataMax) => dataMax * 1.05
+                  (dataMin) => Math.max(0, dataMin * 0.997),
+                  (dataMax) => dataMax * 1.003
                 ]}
               />
               <Tooltip />
