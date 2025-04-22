@@ -10,7 +10,7 @@ function StockPrice() {
     console.log("Fetching price for:", symbol);
 
     try {
-      const response = await axios.get(`http://localhost:5000/api/asset/${symbol}`);
+      const response = await axios.get(`http://localhost:5000/api/finnhub/asset/${symbol}`);
       console.log(response.data);
       setPrice(response.data.c);
       setError(null);

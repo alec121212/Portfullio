@@ -1,4 +1,3 @@
-// src/pages/Login.jsx
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
@@ -8,8 +7,32 @@ import { BsArrowLeftCircle } from "react-icons/bs";
 const Login = () => {
   const navigate = useNavigate();
 
-  const handleSuccess = () => {
-    navigate("/dashboard");
+  const handleSuccess = async (response) => {
+    try {
+      const credential = response.credential;
+
+      const res = await fetch("http://localhost:5000/api/auth/google", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: credential }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+
+        localStorage.setItem("jwtToken", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
+
+        navigate("/dashboard"); 
+      } else {
+        console.error("Auth error:", data.error || "Unknown error");
+        alert("Google authentication failed.");
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+      alert("Something went wrong during login.");
+    }
   };
 
   const handleFailure = () => {
@@ -31,11 +54,6 @@ const Login = () => {
         <div className="d-flex justify-content-center my-4">
           <GoogleLogin onSuccess={handleSuccess} onError={handleFailure} />
         </div>
-
-        {/* Example: or a manual button if needed */}
-        <Button variant="primary" className="w-100" onClick={handleSuccess}>
-          Continue
-        </Button>
       </Card>
     </div>
   );

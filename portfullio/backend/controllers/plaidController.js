@@ -1,9 +1,11 @@
 import plaidClient from '../config/plaid.js';
+import plaidItem from '../models/plaidItem.js';
+import jwt from "jsonwebtoken";
 
 export const createLinkToken = async (req, res) => {
   try {
     const response = await plaidClient.linkTokenCreate({
-      user: { client_user_id: 'test-user-mike-01' }, // Replace w/ real user ID
+      user: { client_user_id: 'test-user-mike-01' },
       client_name: 'Portfullio',
       products: ['investments'],
       country_codes: ['US'],
@@ -19,13 +21,26 @@ export const createLinkToken = async (req, res) => {
 export const exchangePublicToken = async (req, res) => {
   try {
     const { public_token } = req.body;
-    const tokenResponse = await plaidClient.itemPublicTokenExchange({ public_token });
+    const tokenResponse = await plaidClient.itemPublicTokenExchange({
+    public_token, });
     const accessToken = tokenResponse.data.access_token;
-    res.json({ accessToken });
+
+    await plaidItem.findOneAndUpdate(
+      { email: req.userId },
+      { accessToken },
+      { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
+    res.json({ saved: true });
+
   } catch (error) {
     console.error('Public token exchange error:', error.response?.data || error.message);
     res.status(500).json({ error: error.message });
   }
+};
+
+export const plaidStatus = async (req, res) => {
+  const item = await plaidItem.findOne({ email: req.userId });
+  res.json({ exists: Boolean(item) });
 };
 
 export const getInvestments = async (req, res) => {

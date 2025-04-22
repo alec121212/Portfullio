@@ -42,7 +42,7 @@ const Portfolio = () => {
                           symbol = `BINANCE:${asset.ticker}USDT`;
                         }
 
-                        const url = `http://localhost:5000/api/asset/${symbol}`;
+                        const url = `http://localhost:5000/api/finnhub/asset/${symbol}`;
                         const response = await axios.get(url);
                         console.log(`Response for ${symbol}:`, response.data);
                         newPrices[asset.ticker] = Number(response.data.c);
@@ -56,8 +56,12 @@ const Portfolio = () => {
                         newPercentChanges[asset.ticker] = Number(percentChange);
 
                         // For charting
+                        if (isCrypto) {
+                          symbol = `${asset.ticker}-USD`;
+                        }
+                        const res = await axios.get(`http://localhost:5000/api/finnhub/stock/${symbol}/history`);
+
                         symbol = isCryptoAsset ? `${asset.ticker}-USD` : asset.ticker;
-                        const res = await axios.get(`http://localhost:5000/api/stock/${symbol}/history`);
                         console.log(`Response for ${symbol}:`, res.data);
                         const history = res.data;
                         history.forEach(entry => {
