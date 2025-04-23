@@ -8,9 +8,18 @@ Instead of using multiple apps, websites, and platforms to keep track of various
 
 1) Make sure you have the latest version of [npm](https://www.npmjs.com/) installed.
 
+2) Enter the portfullio directory on the repository by the folllowing commands
 ```
 cd portfullio
+npm install
 npm run dev
 ```
+3) Open the link to localhost 5173.
 
-Open the link to localhost 5173 and enjoy!
+4) On a separate terminal, enter the portfullio/backend directory by running the following commands
+```
+cd portfullio/backend
+npm install
+npm run start
+```
+Now the project is ready to run. Note that you will need the correct API keys in a .env file that goes in the portfullio/backend directory for the project to run correctly.
